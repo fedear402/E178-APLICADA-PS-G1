@@ -9,25 +9,19 @@
 * ENVIRONMENT
 *==============================================================================*
 clear all 
- 
-* Save path in local or global
-global main "/Users/federicolopez/Library/CloudStorage/OneDrive-Personal/Documents/UDESA/08/APLICADA/TUTORIALES/T01/PS1"
+global main "/Users/federicolopez/Library/CloudStorage/OneDrive-Personal/Documents/UDESA/08/APLICADA/TUTORIALES/E178-APLICADA-PS-G1/T01/PS1"
 global input "$main/input"
 global output "$main/output"
-
 use "$input/data_russia.dta", clear
 *==============================================================================*
 
 
-* DATA
+
+* 1)
+* Limpieza
 *==============================================================================*
-
-foreach var of varlist id site inwgt sex econrk powrnk resprk satlif satecc highsc belief monage obese cmedin hprblm hosl3m htself wtchng evalhl operat hattac smokes alclmo height waistc hipsiz hhpres totexpr tincm_r geo work0 work1 work2 ortho marsta1 marsta2 marsta3 marsta4 {
-	su `var'
-	tab `var'
-}
-
-// OK : marsta1 marsta2 marsta3 marsta4 height htself inwgt site
+* Identificamos los problemas
+// estan OK : marsta1 marsta2 marsta3 marsta4 height htself inwgt site
 // corregir : 
 /* 
 	- pasar texto a numero (eg 'one' -> 1) + destring
@@ -48,12 +42,11 @@ foreach var of varlist id site inwgt sex econrk powrnk resprk satlif satecc high
 	- continua con prefijo string
 		totexpr hipsiz 
 */
-*********************** problemas:
-
-
+****** corregimos los problemas:
 
 // texto a numero (eg 'one' -> 1)
-foreach var of varlist geo hattac operat evalhl wtchng operat satlif resprk powrnk econrk{
+foreach var of varlist geo hattac operat evalhl wtchng operat satlif resprk /// 
+powrnk econrk{
 	replace `var' = "1" if `var' == "one"
 	replace `var' = "2" if `var' == "two"
 	replace `var' = "3" if `var' == "three"
@@ -66,7 +59,7 @@ foreach var of varlist geo hattac operat evalhl wtchng operat satlif resprk powr
 	replace `var' = "10" if `var' == "ten"
 }
 
-// binaria con texto : 		smokes obese sex
+// variables que no deberian tener textos
 replace smokes="1" if smokes == "Smokes"
 replace sex="1" if sex == "male"
 replace sex="0" if sex == "female"
@@ -75,70 +68,131 @@ replace obese="0" if  obese == "This person is not obese"
 replace hipsiz = substr(hipsiz, 18, .)
 replace totexpr = substr(totexpr, 19, .)
 
-
-// destring
-foreach var of varlist geo hattac operat evalhl wtchng satlif resprk powrnk econrk ortho work0 work1 work2 hprblm hhpres alclmo hosl3m cmedin highsc sex tincm_r waistc monage belief satecc hipsiz obese smokes totexpr marsta1 marsta2 marsta3 marsta4{
+// destringeamos
+foreach var of varlist geo hattac operat evalhl wtchng satlif resprk ///
+powrnk econrk ortho work0 work1 work2 hprblm hhpres alclmo hosl3m cmedin ///
+highsc sex tincm_r waistc monage belief satecc hipsiz obese smokes totexpr ///
+marsta1 marsta2 marsta3 marsta4{
 	destring `var', gen(`var'_) dpcomma
 	drop `var'
 	rename `var'_ `var' 
 }
 
-
-destring geo, gen(geo_)
+// esta deberian ser 3 binarias porque son 3 categorias (no especificadas)
+tab geo, gen(geo_area)
 drop geo
-rename geo_ geo
-
-***** missings
-mdesc
-//self-reported height (htself) tiene 185 (6.5%) de missings y height tiene 28 (1%)
-
-*********************** renombrar:
-rename marsta4 widowed_m4
-rename marsta3 divorced_m3
-rename marsta2 livetog_m2
-rename marsta1 married_m1
-
-***********************
-
-* Check particular values
-count if inwgt== 0
-count if wage==. // alternative way of checking missing values
-
-* Keeping/dropping observations (same with variables)
-keep if wage!=0
-drop if wage==0
-
-* Drop a variable
-generate x=.
-drop x
-
-* Drop outliers
-summarize wage, detail
-drop if wage>r(p99)
-
-* Generate dummies
-* 1. High and low income
-summarize wage, d // return list to see stored values
-gen high_income = .
-replace high_income = 1 if wage>r(p50)
-replace high_income = 0 if wage<=r(p50)
-tabulate high_income // shows values of variable
-* Label variables
-label var high_income "Income above median"
-* Alternatively
-cap drop high_income // drop returns "error" if variable doesn't exists
-summarize wage, detail
-gen high_income = (wage>r(p50))
-
-* 2. Beauty dummies
-tab looks, gen(beauty)
-rename beauty1 homely
-rename beauty2 plain 
-rename beauty3 average
-rename beauty4 good_loking
-rename beauty5 handsome    
-
-
-* Save database (with a different name!!!)
-save "$input/beauty_clean", replace
+// puede ser que belief tambien pero no especifica 
+// interpreto que los valores 1-5 son para qué tan creyentes son 
+// y no que grupo religioso pertenecen
 *==============================================================================*
+
+
+
+* 2)
+* MISSINGS
+*==============================================================================*
+mdesc
+// tincm_r, htself y totexpr tienen 6.5% de missings
+// monage y obese tienen 7.2% de missings
+*==============================================================================*
+
+
+
+* 3)
+* IRREGULARES
+*==============================================================================*
+/* 
+Corregir:
+	- no deberian ser cero o negativos (gasto, peso, ingresp)
+		tincm_r totexpr inwgt
+*/
+
+foreach var of varlist tincm_r totexpr inwgt{
+	replace `var' = . if `var' <=0 
+}
+
+// Gastos mayores a ingresos
+replace  totexpr = . if totexpr > tincm_r
+
+mdesc // quedaron con muchisimos missings
+*==============================================================================*
+
+
+
+
+* 4)
+* ORDEN
+*==============================================================================*
+order id site sex
+sort totexpr
+*==============================================================================*
+
+
+
+
+* 5)
+* ESTADISTICAS DESCRIPTIVAS
+*==============================================================================*
+gen yage = floor(monage/12)
+// Resumir variables sex yage satlif waistc totexpr
+label var sex "Sexo"
+label var yage "Edad en años"
+label var satlif "Satisfacción con la vida"
+label var waistc "Circunferencia de la cadera"
+label var totexpr "Gasto total real"
+* Exportar
+estpost summarize sex yage satlif waistc totexpr, listwise
+esttab using "$output/tables/ej5.tex", cells("mean sd min max") ///
+collabels("Mean" "SD" "Min" "Max") nomtitle nonumber replace label 
+*==============================================================================*
+
+
+
+* 6)
+* HIPS DON'T LIE
+*==============================================================================*
+***** a)
+quietly summarize hipsiz if sex == 1, detail
+local median_female = r(mean)
+
+quietly summarize hipsiz if sex == 0, detail
+local median_male = r(mean)
+
+* achicado para que se vea mejor
+gen hs = hipsiz if ( (hipsiz < 140) & (hipsiz > 60) )
+
+twoway (kdensity hs if sex==1, color(red))   ///
+       (kdensity hs if sex==0, color(blue)), ///
+		legend(label(1 "Females") label(2 "Males")) title("Distribution of Hip Size") ///
+		ytitle("Density") xtitle("Hip Size") ///
+		xline(`median_female', lcolor(blue) lwidth(medium)) ///
+		xline(`median_male', lcolor(red) lwidth(medium)) ///
+		xscale(range(65 135))
+
+graph export "$output/figures/hipsiz_density_menvswomen_means.png", replace
+
+***** b)
+ttest hipsiz, by(sex)
+estpost ttest hipsiz, by(sex) listwise esample
+esttab using "$output/tables/hips.tex", wide nonumber mtitle(Difference) /// 
+cells("b count se t df_t p") collabels("Diff. mean" "Obs" "Diff. Sd" "T-Stat" "df" "p-value") replace label
+*==============================================================================*
+
+
+
+
+* 7)
+* REGRESION
+*==============================================================================*
+order id site sex satlif
+reg satlif monage sex height tincm_r /// *las obvias
+resprk /// econrk powrnk podrian ser tambien, esta posiblemente esta mejor relacionada con percepcion de satisfaccion
+belief /// si sos mas creyente yo espero que estes mas feliz en vida sabiendo que vas al cielo
+obese /// si sos obeso tu calidad de vida es peor probablemente
+cmedin /// tener seguro te relaja de preocuparte si tenes un accidente por ahi pero va a estar super correlacionada con ingreso
+evalhl /// esta (o podria ser la de hospitalizado/problemas) para ver si el se considera saludable
+smokes /// va a estar muy relacionada con salud pero fumar te puede hacer feliz -> estar mas satisfecho
+work0 work1 /// status laboral -> trabajar te hace mas satisfecho? (omitiendo not working)
+marsta1 marsta2 marsta3 /// estar casado te puede hacer mas satisfecho, divorciado o viudo(omitida) quizas menos 
+geo_area1 geo_area2 //el lugar (de residencia? no se entiende bien que es la variable) podria relacionarse la percepcion de satisfaccion
+
