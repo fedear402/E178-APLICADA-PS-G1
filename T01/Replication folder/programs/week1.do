@@ -29,12 +29,12 @@ Este archivo sigue la siguiente estructura:
 clear all // me aseguro de no pisar nada que tenga abierto
 
 * Set working directory
-cd "/Users/federicolopez/Library/CloudStorage/OneDrive-Personal/Documents/UDESA/08/APLICADA/TUTORIALES/T01/Replication folder"
+cd "/Users/federicolopez/Library/CloudStorage/OneDrive-Personal/Documents/UDESA/08/APLICADA/TUTORIALES/E178-APLICADA-PS-G1/T01/Replication folder"
 * Load dataset 
 use "input/beauty", clear // Hamermesh, D. S., & Biddle, J. (1993). Beauty and the labor market.
  
 * Save path in local or global
-global main "/Users/federicolopez/Library/CloudStorage/OneDrive-Personal/Documents/UDESA/08/APLICADA/TUTORIALES/T01/Replication folder"
+global main "/Users/federicolopez/Library/CloudStorage/OneDrive-Personal/Documents/UDESA/08/APLICADA/TUTORIALES/E178-APLICADA-PS-G1/T01/Replication folder"
 global input "$main/input"
 global output "$main/output"
 

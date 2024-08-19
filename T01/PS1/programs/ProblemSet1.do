@@ -1,8 +1,8 @@
 /*******************************************************************************
 								Problem Set 1 
 
-                          Universidad de San Andrés
-                              Economía Aplicada
+          Universidad de San Andrés
+              Economía Aplicada
 									2024							           
 *******************************************************************************/
 
@@ -14,7 +14,6 @@ global input "$main/input"
 global output "$main/output"
 use "$input/data_russia.dta", clear
 *==============================================================================*
-
 
 
 * 1)
@@ -58,6 +57,7 @@ powrnk econrk{
 	replace `var' = "9" if `var' == "nine"
 	replace `var' = "10" if `var' == "ten"
 }
+
 
 // variables que no deberian tener textos
 replace smokes="1" if smokes == "Smokes"
@@ -175,7 +175,8 @@ graph export "$output/figures/hipsiz_density_menvswomen_means.png", replace
 ttest hipsiz, by(sex)
 estpost ttest hipsiz, by(sex) listwise esample
 esttab using "$output/tables/hips.tex", wide nonumber mtitle(Difference) /// 
-cells("b count se t df_t p") collabels("Diff. mean" "Obs" "Diff. Sd" "T-Stat" "df" "p-value") replace label
+cells("b count se t df_t p") /// 
+collabels("Diff. mean" "Obs" "Diff. Sd" "T-Stat" "df" "p-value") replace label
 *==============================================================================*
 
 
@@ -184,7 +185,18 @@ cells("b count se t df_t p") collabels("Diff. mean" "Obs" "Diff. Sd" "T-Stat" "d
 * 7)
 * REGRESION
 *==============================================================================*
-order id site sex satlif
+graph box yage, over(satlif) ///
+    title("Edades para cada grupo de felicidad") ///
+    ytitle("Edad")
+graph export "$output/figures/box_age_satlif.png", replace
+
+
+graph bar (count), over(sex, label(angle(45))) over(satlif) ///
+    asyvars ///
+    bar(1, color(blue)) bar(2, color(red)) ///
+    legend(order(1 "Male" 2 "Female"))
+graph export "$output/figures/bar_sex_satlif.png", replace
+
 reg satlif monage sex height tincm_r /// *las obvias
 resprk /// econrk powrnk podrian ser tambien, esta posiblemente esta mejor relacionada con percepcion de satisfaccion
 belief /// si sos mas creyente yo espero que estes mas feliz en vida sabiendo que vas al cielo
