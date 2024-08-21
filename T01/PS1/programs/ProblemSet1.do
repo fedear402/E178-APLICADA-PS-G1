@@ -185,26 +185,49 @@ collabels("Diff. mean" "Obs" "Diff. Sd" "T-Stat" "df" "p-value") replace label
 * 7)
 * REGRESION
 *==============================================================================*
+***** Graficos
 graph box yage, over(satlif) ///
     title("Edades para cada grupo de felicidad") ///
-    ytitle("Edad")
+    ytitle("Edad") b1title("Satisfaccion") ///
+    graphregion(lcolor(black) lwidth(medium))
 graph export "$output/figures/box_age_satlif.png", replace
 
 
 graph bar (count), over(sex, label(angle(45))) over(satlif) ///
     asyvars ///
     bar(1, color(blue)) bar(2, color(red)) ///
-    legend(order(1 "Male" 2 "Female"))
+    title("Satisfaccion por sexo") ///
+    legend(order(1 "Male" 2 "Female")) ///
+    ytitle("") b1title("Satisfaccion") ///
+    graphregion(lcolor(black) lwidth(medium))
 graph export "$output/figures/bar_sex_satlif.png", replace
 
-reg satlif monage sex height tincm_r /// *las obvias
-resprk /// econrk powrnk podrian ser tambien, esta posiblemente esta mejor relacionada con percepcion de satisfaccion
-belief /// si sos mas creyente yo espero que estes mas feliz en vida sabiendo que vas al cielo
-obese /// si sos obeso tu calidad de vida es peor probablemente
-cmedin /// tener seguro te relaja de preocuparte si tenes un accidente por ahi pero va a estar super correlacionada con ingreso
-evalhl /// esta (o podria ser la de hospitalizado/problemas) para ver si el se considera saludable
-smokes /// va a estar muy relacionada con salud pero fumar te puede hacer feliz -> estar mas satisfecho
-work0 work1 /// status laboral -> trabajar te hace mas satisfecho? (omitiendo not working)
-marsta1 marsta2 marsta3 /// estar casado te puede hacer mas satisfecho, divorciado o viudo(omitida) quizas menos 
-geo_area1 geo_area2 //el lugar (de residencia? no se entiende bien que es la variable) podria relacionarse la percepcion de satisfaccion
 
+***** Especificacion 1
+reg satlif monage sex height tincm_r /// las obvias
+///
+resprk /// econrk powrnk podrian ser tambien, esta posiblemente esta mejor 
+///relacionada con percepcion de satisfaccion
+///
+belief /// si sos mas creyente yo espero que estes mas feliz en vida 
+///(sabiendo que vas al cielo, quizas)
+///
+obese /// si sos obeso tu calidad de vida es peor probablemente
+///
+cmedin /// tener seguro te relaja de preocuparte si tenes un 
+///accidente por ahi pero va a estar super correlacionada con ingreso
+///lo muestra finkelstein en portland con el Oregon Health Insurance Experiment
+///
+evalhl /// esta (o podria ser la de hospitalizado/problemas) para ver si el se considera saludable
+///
+smokes /// va a estar muy relacionada con salud pero fumar te podria hacer mas satisfecho
+///
+work0 work1 /// status laboral -> trabajar te hace mas satisfecho? (omitiendo not working)
+///
+marsta1 marsta2 marsta3 /// estar casado te puede hacer mas satisfecho, 
+///divorciado o viudo(omitida) quizas menos 
+///
+geo_area1 geo_area2 //el lugar (de residencia? no se entiende bien que es la variable)
+///podria relacionarse la percepcion de satisfaccion
+
+***** Especificacion 2
