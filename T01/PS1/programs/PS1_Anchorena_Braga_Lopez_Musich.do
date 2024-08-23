@@ -1,11 +1,10 @@
 /*******************************************************************************
 								Problem Set 1 
 
-          Universidad de San Andrés
-              Economía Aplicada
+          				Universidad de San Andrés
+              				  Economía Aplicada
 									2024							           
 *******************************************************************************/
-
 * ENVIRONMENT
 *==============================================================================*
 clear all 
@@ -14,27 +13,29 @@ global input "$main/input"
 global output "$main/output"
 use "$input/data_russia.dta", clear
 *==============================================================================*
-
-
 * 1)
 * Limpieza
 *==============================================================================*
-* Identificamos los problemas
+****** 
+// Identificamos los problemas
 // estan OK : marsta1 marsta2 marsta3 marsta4 height htself inwgt site
 // corregir : 
 /* 
 	- pasar texto a numero (eg 'one' -> 1) + destring
 		geo hattac operat evalhl wtchng operat satlif resprk powrnk econrk
+
 	- binaria en texto 
 		smokes obese sex
 		
 	- binaria como string sin missings
 		ortho work0 work1 work2 operat hprblm
+
 	- binaria como string con missings
 		hhpres alclmo hattac hhpres hosl3m cmedin highsc
 		
 	- tab para hacer varias binarias
 		geo
+
 	- continua como string
 		tincm_r waistc monage belief satecc
 
@@ -85,9 +86,6 @@ drop geo
 // interpreto que los valores 1-5 son para qué tan creyentes son 
 // y no que grupo religioso pertenecen
 *==============================================================================*
-
-
-
 * 2)
 * MISSINGS
 *==============================================================================*
@@ -95,9 +93,6 @@ mdesc
 // tincm_r, htself y totexpr tienen 6.5% de missings
 // monage y obese tienen 7.2% de missings
 *==============================================================================*
-
-
-
 * 3)
 * IRREGULARES
 *==============================================================================*
@@ -116,20 +111,12 @@ replace  totexpr = . if totexpr > tincm_r
 
 mdesc // quedaron con muchisimos missings
 *==============================================================================*
-
-
-
-
 * 4)
 * ORDEN
 *==============================================================================*
 order id site sex
 sort totexpr
 *==============================================================================*
-
-
-
-
 * 5)
 * ESTADISTICAS DESCRIPTIVAS
 *==============================================================================*
@@ -145,9 +132,6 @@ estpost summarize sex yage satlif waistc totexpr, listwise
 esttab using "$output/tables/ej5.tex", cells("mean sd min max") ///
 collabels("Mean" "SD" "Min" "Max") nomtitle nonumber replace label 
 *==============================================================================*
-
-
-
 * 6)
 * HIPS DON'T LIE
 *==============================================================================*
@@ -163,12 +147,12 @@ gen hs = hipsiz if ( (hipsiz < 140) & (hipsiz > 60) )
 
 twoway (kdensity hs if sex==1, color(red))   ///
        (kdensity hs if sex==0, color(blue)), ///
-		legend(label(1 "Females") label(2 "Males")) title("Distribution of Hip Size") ///
+		legend(label(1 "Females") label(2 "Males")) ///
+		 title("Distribution of Hip Size") ///
 		ytitle("Density") xtitle("Hip Size") ///
 		xline(`median_female', lcolor(blue) lwidth(medium)) ///
 		xline(`median_male', lcolor(red) lwidth(medium)) ///
 		xscale(range(65 135))
-
 graph export "$output/figures/hipsiz_density_menvswomen_means.png", replace
 
 ***** b)
@@ -178,13 +162,10 @@ esttab using "$output/tables/hips.tex", wide nonumber mtitle(Difference) ///
 cells("b count se t df_t p") /// 
 collabels("Diff. mean" "Obs" "Diff. Sd" "T-Stat" "df" "p-value") replace label
 *==============================================================================*
-
-
-
-
 * 7)
 * REGRESION
 *==============================================================================*
+***** a)
 ***** Graficos
 graph box yage, over(satlif) ///
     title("Edades para cada grupo de felicidad") ///
@@ -195,7 +176,7 @@ graph export "$output/figures/box_age_satlif.png", replace
 
 graph bar (count), over(sex, label(angle(45))) over(satlif) ///
     asyvars ///
-    bar(1, color(blue)) bar(2, color(red)) ///
+    bar(1, color("255 205 147")) bar(2, color("71 125 171")) ///
     title("Satisfaccion por sexo") ///
     legend(order(1 "Male" 2 "Female")) ///
     ytitle("") b1title("Satisfaccion") ///
@@ -203,8 +184,39 @@ graph bar (count), over(sex, label(angle(45))) over(satlif) ///
 graph export "$output/figures/bar_sex_satlif.png", replace
 
 
+***** b)
+* Analizamos las variables
+/*
+****** basicas 
+monage sex geo_area1 geo_area2 		    // caracteristicas basicas
+waistc hipsiz height    				// caracteristicas fisicas
+
+****** salud
+obese inwgt wtchng						// Peso
+cmedin 									// Seguro Médico
+hprblm hosl3m operat hattac				// Si en ultimo tiempo...
+evalhl 									// Salud autoevaluacion
+smokes 									// Fuma
+alclmo									// Alcohol
+
+****** economicas
+work0 work1 work2						// Estado Laboral
+totexpr 								// Gasto Total
+tincm_r 								// Ingreso Total
+
+****** personales
+satecc
+highsc									// Satisfaccion con su economia
+htself									// Altura autoevaluacion
+econrk powrnk resprk				    // Rank Ladder
+marsta1 marsta2 marsta3 marsta4 		// Estado Civil
+belief ortho							// Creencia religiosa
+*/
+
+* Vamos a hacer una especificacion
 ***** Especificacion 1
-reg satlif monage sex height tincm_r /// las obvias
+reg satlif monage sex height tincm_r geo_area1 geo_area2 /// 
+/// las obvias: sexo altura edad ingreso ciudad
 ///
 resprk /// econrk powrnk podrian ser tambien, esta posiblemente esta mejor 
 ///relacionada con percepcion de satisfaccion
@@ -218,16 +230,27 @@ cmedin /// tener seguro te relaja de preocuparte si tenes un
 ///accidente por ahi pero va a estar super correlacionada con ingreso
 ///lo muestra finkelstein en portland con el Oregon Health Insurance Experiment
 ///
-evalhl /// esta (o podria ser la de hospitalizado/problemas) para ver si el se considera saludable
+evalhl /// esta (o podria ser la de hospitalizado/problemas) para ver si el se 
+///considera saludable
 ///
-smokes /// va a estar muy relacionada con salud pero fumar te podria hacer mas satisfecho
+smokes /// muy relacionada con salud-fumar te podria hacer mas satisfecho
 ///
-work0 work1 /// status laboral -> trabajar te hace mas satisfecho? (omitiendo not working)
+work0 work1 /// status laboral -> trabajar te hace mas satisfecho? (mas ingresos)
 ///
 marsta1 marsta2 marsta3 /// estar casado te puede hacer mas satisfecho, 
 ///divorciado o viudo(omitida) quizas menos 
 ///
-geo_area1 geo_area2 //el lugar (de residencia? no se entiende bien que es la variable)
-///podria relacionarse la percepcion de satisfaccion
+highsc /// mas educacion -> mas satisfaccion
+
+
 
 ***** Especificacion 2
+
+*==============================================================================*
+
+
+
+
+
+
+
