@@ -1,0 +1,36 @@
+		(1)
+VARIABLES	LABELS	Satisfacción con la vida
+		
+yage	Edad en años	0.000726
+		(0.00152)
+sex	Sexo	0.109**
+		(0.0458)
+tincm_r	HH Income Real	2.87e-05***
+		(3.76e-06)
+geo_area1	geo==     1.0000	-0.0475
+		(0.0641)
+geo_area2	geo==     2.0000	-0.0642
+		(0.0562)
+resprk	Respect Rank Ladder	0.0931***
+		(0.0119)
+cmedin	Medical Insurance	0.224***
+		(0.0712)
+evalhl	Health Self-Evaluation	0.311***
+		(0.0339)
+work0	Working	0.0782
+		(0.0509)
+work1	Leaving Work	0.352**
+		(0.157)
+marsta1	Married	-0.135**
+		(0.0534)
+marsta2	Living Together	-0.110
+		(0.0957)
+marsta3	Divorced	-0.190**
+		(0.0876)
+Constant	Constant	0.575***
+		(0.169)
+		
+Observations		2,293
+R-squared		0.127
+Standard errors in parentheses		
+*** p<0.01, ** p<0.05, * p<0.1		

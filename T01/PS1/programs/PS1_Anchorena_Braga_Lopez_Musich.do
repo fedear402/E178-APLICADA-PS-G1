@@ -8,7 +8,7 @@
 * ENVIRONMENT
 *==============================================================================*
 clear all 
-global main "/Users/federicolopez/Library/CloudStorage/OneDrive-Personal/Documents/UDESA/08/APLICADA/TUTORIALES/E178-APLICADA-PS-G1/T01/PS1"
+global main ""
 global input "$main/input"
 global output "$main/output"
 use "$input/data_russia.dta", clear
@@ -127,6 +127,7 @@ label var yage "Edad en años"
 label var satlif "Satisfacción con la vida"
 label var waistc "Circunferencia de la cadera"
 label var totexpr "Gasto total real"
+
 * Exportar
 estpost summarize sex yage satlif waistc totexpr, listwise
 esttab using "$output/tables/ej5.tex", cells("mean sd min max") ///
@@ -214,38 +215,36 @@ belief ortho							// Creencia religiosa
 */
 
 * Vamos a hacer una especificacion
+
+label var geo_area1 "Geo 1"
+label var geo_area2 "Geo 2"
+
 ***** Especificacion 1
-reg satlif monage sex height tincm_r geo_area1 geo_area2 /// 
-/// las obvias: sexo altura edad ingreso ciudad
+reg satlif yage sex tincm_r geo_area1 geo_area2 /// 
+/// las obvias: sexo edad ingreso ciudad
 ///
 resprk /// econrk powrnk podrian ser tambien, esta posiblemente esta mejor 
 ///relacionada con percepcion de satisfaccion
-///
-belief /// si sos mas creyente yo espero que estes mas feliz en vida 
-///(sabiendo que vas al cielo, quizas)
-///
-obese /// si sos obeso tu calidad de vida es peor probablemente
-///
 cmedin /// tener seguro te relaja de preocuparte si tenes un 
 ///accidente por ahi pero va a estar super correlacionada con ingreso
-///lo muestra finkelstein en portland con el Oregon Health Insurance Experiment
+///pero no con salud, lo muestra finkelstein
 ///
 evalhl /// esta (o podria ser la de hospitalizado/problemas) para ver si el se 
 ///considera saludable
 ///
-smokes /// muy relacionada con salud-fumar te podria hacer mas satisfecho
-///
 work0 work1 /// status laboral -> trabajar te hace mas satisfecho? (mas ingresos)
 ///
-marsta1 marsta2 marsta3 /// estar casado te puede hacer mas satisfecho, 
-///divorciado o viudo(omitida) quizas menos 
-///
-highsc /// mas educacion -> mas satisfaccion
+marsta1 marsta2 marsta3 // estar casado te puede hacer mas satisfecho, 
+//divorciado o viudo(omitida) quizas menos 
 
+outreg2 using "$output/tables/Table1.tex", replace label
 
 
 ***** Especificacion 2
-
+reg satlif yage sex tincm_r geo_area1 geo_area2 marsta1 marsta2 marsta3 ///
+work0 work1 ///
+evalhl hprblm hosl3m operat hattac obese inwgt wtchng belief econrk highsc ///
+outreg2 using "$output/tables/Table2.tex", replace label
 *==============================================================================*
 
 
