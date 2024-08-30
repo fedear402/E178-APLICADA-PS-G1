@@ -83,7 +83,7 @@ esttab using "$output/PanelA.rtf", replace label noobs ///
 keep(treat, relax) ///
 cells( b(fmt(3)) t(drop(treat)) se(par label(SE) fmt(3)) ) /// 
 title("Panel A. Child’s cognitive skills at follow-up") ///
-collabels("") ///
+collabels("") nonumbers ///
 eqlabels("Point Estimate" "SE") ///
 stats(N, labels("Sample size") ) 
 
@@ -114,8 +114,8 @@ foreach y of local roth{
 esttab using "$output/PanelB.rtf", replace label noobs ///
 keep(treat, relax) ///
 cells( b(fmt(3)) t(drop(treat)) se(par label(SE) fmt(3)) ) /// 
-title("Panel A. Child’s cognitive skills at follow-up") ///
-collabels("") ///
+title("Panel B. Child’s socio-emotional skills at follow-up") ///
+collabels("") nonumbers ///
 eqlabels("Point Estimate" "SE") ///
 stats(N, labels("Sample size") ) 
 
@@ -139,8 +139,8 @@ foreach y of local fcimat{
 esttab using "$output/PanelC.rtf", replace label noobs ///
 keep(treat, relax) ///
 cells( b(fmt(3)) t(drop(treat)) se(par label(SE) fmt(3)) ) /// 
-title("Panel A. Child’s cognitive skills at follow-up") ///
-collabels("") ///
+title("Panel C. Material investments at follow-up") ///
+collabels("") nonumbers ///
 eqlabels("Point Estimate" "SE") ///
 stats(N, labels("Sample size") ) 
 
@@ -162,9 +162,9 @@ foreach y of local fcitime{
 } 
 
 esttab using "$output/PanelD.rtf", replace label noobs ///
-keep(treat, relax) ///
+keep(treat, relax)nonumbers  ///
 cells( b(fmt(3)) t(drop(treat)) se(par label(SE) fmt(3)) ) /// 
-title("Panel A. Child’s cognitive skills at follow-up") ///
+title("Panel D. Time investments at follow-up") ///
 collabels("") ///
 eqlabels("Point Estimate" "SE") ///
 stats(N, labels("Sample size") ) 
@@ -223,24 +223,25 @@ eststo clear
 local fcitime "fci_play_act home_stories home_read home_toys home_name"
 foreach y of local fcitime {
     cap drop V*
-    reg `y'1_st treat fci_play_act0_st $covs_ent, cluster(cod_dane)
+    qui reg `y'1_st treat fci_play_act0_st $covs_ent, cluster(cod_dane)
     eststo: test treat = 0
     mat p_values[i, 1] = r(p)
 scalar i = i + 1
 }
 
 preserve
-clear all
+clear 
 svmat p_values
-gen var  = _n
-sort p_values1 
+gen output = _n
+sort p_values
 save "$output/pvalores.dta", replace
 gen alpha_corr = signif / (hyp + 1 - _n)
 gen significant = (p_values1 < alpha_corr)
 
 replace significant = 0 if significant[_n-1] == 0
-sort var
+sort output
 restore
+
 
 * Export the p-values and corrected p-values using estout
 esttab using "$output/Corrected_PValues.rtf", replace ///
