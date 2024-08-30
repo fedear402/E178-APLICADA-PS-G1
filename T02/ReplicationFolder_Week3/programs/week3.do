@@ -27,11 +27,14 @@ Este archivo sigue la siguiente estructura:
 clear all
 set more off
 * Change global main to reproduce results
-global main "G:\Mi unidad\Clases\Tutoriales Aplicada 2024\Clases\3. Inferencia - MHT\Stata\Tutorial"
+global main "/Users/federicolopez/Library/CloudStorage/OneDrive-Personal/Documents/UDESA/08/APLICADA/TUTORIALES/E178-APLICADA-PS-G1/T02/ReplicationFolder_Week3"
 global input "$main/input"
 global output "$main/output"
 use "$input/UCT_FINAL_CLEAN.dta", clear
-/* Haushofer, J., & Shapiro, J. (2016). The short-term impact of unconditional cash transfers to the poor: experimental evidence from Kenya. The Quarterly Journal of Economics, 131(4), 1973-2042. */
+/* Haushofer, J., & Shapiro, J. (2016). The short-term impact of unconditional cash
+transfers to the poor: experimental evidence from Kenya. 
+The Quarterly Journal of Economics, 131(4), 1973-2042. */
+
 drop if purecontrol == 1
 
 label var psy_lncort_mean1 "Log cortisol (no controls)"        
@@ -52,16 +55,30 @@ label var psy_index_z1 "Psychological well-being index"
 * 1) Table 4 - Replication
 *==============================================================================*
 * Row 1
-eststo clear
-eststo: reg psy_lncort_mean1 treat psy_lncort_mean_full0 psy_lncort_mean_miss0 i.village, cluster(surveyid)
-esttab using "$output/Table 4 - Row 1.rtf", se replace label noobs ///
-keep(treat, relax) ///
-cells(b(fmt(2) star) se(par fmt(2))) ///
+eststo clear // Clears any previously stored estimation results.
+
+eststo: ///Runs the regression and stores the results under a name (default name if not specified).
+reg psy_lncort_mean1 treat psy_lncort_mean_full0 psy_lncort_mean_miss0 ///
+i.village, /// fixed effects (i.village)
+cluster(surveyid) /// clustering standard errors at the surveyid level.
+
+esttab using "$output/Table 4 - Row 1.rtf", /// Exports the regression results to an RTF file. 
+se replace /// Saves standard errors, 
+///replacing the existing file if necessary.
+label noobs /// Includes variable labels in the output and omits the observation number.
+keep(treat, relax) /// keeps only the coefficients for treat and relax.
+cells(b(fmt(2) star) se(par fmt(2))) /// Formats coefficients to two decimal places
+///and adds stars for significance; 
+///standard errors are enclosed in parentheses.
 stats(N r2, fmt(0 2) labels("Number of Observations" "R-Squared")) 
+// Includes the number of observations and R-squared in the output.
+
 
 * Row 2
+// same operations as in Row 1, but for the variable psy_lncort_mean_clean1
 eststo clear
-eststo: reg psy_lncort_mean_clean1 treat psy_lncort_mean_clean_full0 psy_lncort_mean_clean_miss0 i.village, cluster(surveyid)
+eststo: reg psy_lncort_mean_clean1 treat psy_lncort_mean_clean_full0 ///
+psy_lncort_mean_clean_miss0 i.village, cluster(surveyid)
 esttab using "$output/Table 4 - Row 2.rtf", se replace label noobs ///
 keep(treat, relax) ///
 cells(b(fmt(2) star) se(par fmt(2))) ///
@@ -69,15 +86,18 @@ stats(N r2, fmt(0 2) labels("Number of Observations" "R-Squared"))
 
 * All rows
 global psyvars "psy_lncort_mean psy_lncort_mean_clean psy_cesdscore psy_worries_z psy_stressscore_z psy_hap_z psy_sat_z psy_trust_z psy_locus_z psy_scheierscore_z psy_rosenbergscore_z psy_index_z"
+
 eststo clear
+
 foreach y in $psyvars{
 	local outcome "`y'1"
 	eststo: reg `outcome' treat `y'_full0 `y'_miss0 i.village, cluster(surveyid)
 }
-esttab using "$output/Table 4.txt", se replace label noobs ///
+
+esttab using "$output/Table4_.rtf", se replace label noobs ///
 keep(treat, relax) ///
 cells(b(fmt(2) star) se(par fmt(2))) ///
-stats(N r2, fmt(0 2) labels("Number of Observations" "R-Squared")) 
+stats(N r2, fmt(0 2) labels("Number of Observations" "R-Squared"))
 *==============================================================================*
 
 
