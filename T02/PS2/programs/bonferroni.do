@@ -165,19 +165,62 @@ stats(N p_value corr_p_value alpha_corr, ///
 labels("Sample size" "p-value" "Bonferroni") ) 
 
 *******************************************************************************
+*******************************************************************************
+*******************************************************************************
 
-
+*==============================================================================*
+*HOLM
+*==============================================================================*
 clear
 svmat p_values
 gen _ = _n
 sort p_values1
+save "$output/pvals.dta", replace
 gen alpha_corr = signif/(hipotesis+1-_n)
 gen significant = (p_values1<alpha_corr)
 replace significant = 0 if significant[_n-1]==0
 sort _
 mkmat alpha_corr, matrix(holm)
 
-
+*==============================================================================*
+*BKY
+*==============================================================================*
+use "$output/pvals.dta", clear
+rename p_values1 pval
+version 10
+set more off
+quietly sum pval
+local totalpvals = r(N)
+quietly gen int original_sorting_order = _n
+quietly sort pval
+quietly gen int rank = _n if pval~=.
+local qval = 1
+gen bky06_qval = 1 if pval~=.
+while `qval' > 0 {
+	local qval_adj = `qval'/(1+`qval')
+	gen fdr_temp1 = `qval_adj'*rank/`totalpvals'
+	gen reject_temp1 = (fdr_temp1>=pval) if pval~=.
+	gen reject_rank1 = reject_temp1*rank
+	egen total_rejected1 = max(reject_rank1)
+	local qval_2st = `qval_adj'*(`totalpvals'/(`totalpvals'-total_rejected1[1]))
+	gen fdr_temp2 = `qval_2st'*rank/`totalpvals'
+	gen reject_temp2 = (fdr_temp2>=pval) if pval~=.
+	gen reject_rank2 = reject_temp2*rank
+	egen total_rejected2 = max(reject_rank2)
+	replace bky06_qval = `qval' if rank <= total_rejected2 & rank~=.
+	drop fdr_temp* reject_temp* reject_rank* total_rejected*
+	local qval = `qval' - .001
+}
+quietly sort original_sorting_order
+pause off
+set more on
+display "Code has completed."
+display "Benjamini Krieger Yekutieli (2006) sharpened q-vals are in variable 'bky06_qval'"
+display	"Sorting order is the same as the original vector of p-values"
+keep pval bky06_qval
+mkmat bky06_qval, matrix(bky)
+save "$output/sharpenedqvals.dta", replace
+*==============================================================================*
 use "$input/measures.dta", clear 
 global covs_eva	"male i.eva_fu" 
 global covs_ent	"male i.ent_fu"
@@ -206,7 +249,6 @@ label var home_name1_st "FCI: Number of times named things to child in last 3 da
 
 
 
-
 *******************************************************************************
 scalar i = 1
 ******************************************************************************* 
@@ -223,6 +265,7 @@ foreach y of local bayley{
 		estadd scalar p_value = r(p)
 		estadd scalar corr_p_value = min(1,r(p)*hipotesis)		
 		estadd scalar holm_ = holm[i,1]
+		estadd scalar bky_ = bky[i,1]
 		scalar i = i + 1			
 } 
 
@@ -234,6 +277,7 @@ foreach y of local macarthur{
 	estadd scalar p_value = r(p)
 	estadd scalar corr_p_value = min(1,r(p)*hipotesis)	
 	estadd scalar holm_ = holm[i,1]
+	estadd scalar bky_ = bky[i,1]			
 	scalar i = i + 1	
 } 
 
@@ -243,8 +287,8 @@ cells(b(fmt(3)) t(drop(treat)) se(par label(SE) fmt(3)) ) ///
 title("Panel A. Child’s cognitive skills at follow-up") ///
 collabels("") nonumbers ///
 eqlabels("Point Estimate" "SE") ///
-stats(N p_value corr_p_value holm_, /// 
-labels("Sample size" "p-value" "Bonferroni" "Holm") ) 
+stats(N p_value corr_p_value holm_ bky_, /// 
+labels("Sample size" "p-value" "Bonferroni" "Holm" "BKY") ) 
 
 
 ******************************************************************************* 
@@ -259,7 +303,8 @@ foreach y of local bates{
 	estadd scalar p_value = r(p)
 	estadd scalar corr_p_value = min(1,r(p)*hipotesis)
 	estadd scalar holm_ = holm[i,1]
-scalar i = i + 1						
+	estadd scalar bky_ = bky[i,1]
+	scalar i = i + 1						
 } 
 
 local roth "roth_inhibit roth_attention" 
@@ -270,7 +315,8 @@ foreach y of local roth{
 	estadd scalar p_value = r(p)
 	estadd scalar corr_p_value = min(1,r(p)*hipotesis)
 	estadd scalar holm_ = holm[i,1]
-scalar i = i + 1
+	estadd scalar bky_ = bky[i,1]
+	scalar i = i + 1
 } 
 
 esttab using "$output/PanelB_bonferroni_holm.rtf", replace label noobs ///
@@ -279,8 +325,8 @@ cells(b(fmt(3)) t(drop(treat)) se(par label(SE) fmt(3)) ) ///
 title("Panel B. Child’s socio-emotional skills at follow-up") ///
 collabels("") nonumbers ///
 eqlabels("Point Estimate" "SE") ///
-stats(N p_value corr_p_value holm_, /// 
-labels("Sample size" "p-value" "Bonferroni" "Holm") ) 
+stats(N p_value corr_p_value holm_ bky_, /// 
+labels("Sample size" "p-value" "Bonferroni" "Holm" "BKY") ) 
 
 ******************************************************************************* 
 * PANEL C (Material investments)  
@@ -294,7 +340,8 @@ foreach y of local fcimat{
 	estadd scalar p_value = r(p)
 	estadd scalar corr_p_value = min(1,r(p)*hipotesis)	
 	estadd scalar holm_ = holm[i,1]
-scalar i = i + 1
+	estadd scalar bky_ = bky[i,1]
+	scalar i = i + 1
 } 
 
 esttab using "$output/PanelC_bonferroni_holm.rtf", replace label noobs ///
@@ -303,8 +350,8 @@ cells(b(fmt(3)) t(drop(treat)) se(par label(SE) fmt(3)) ) ///
 title("Panel C. Material investments at follow-up") ///
 collabels("") nonumbers ///
 eqlabels("Point Estimate" "SE") ///
-stats(N p_value corr_p_value holm_, /// 
-labels("Sample size" "p-value" "Bonferroni" "Holm") ) 
+stats(N p_value corr_p_value holm_ bky_, /// 
+labels("Sample size" "p-value" "Bonferroni" "Holm" "BKY") ) 
 
 ******************************************************************************* 
 * PANEL D (Time investments)  
@@ -318,6 +365,7 @@ foreach y of local fcitime{
 	estadd scalar p_value = r(p)
 	estadd scalar corr_p_value = min(1,r(p)*hipotesis)
 	estadd scalar holm_ = holm[i,1]
+	estadd scalar bky_ = bky[i,1]
 scalar i = i + 1
 }
 
@@ -327,5 +375,5 @@ cells( b(fmt(3)) t(drop(treat)) se(par label(SE) fmt(3)) ) ///
 title("Panel D. Time investments at follow-up") ///
 collabels("") ///
 eqlabels("Point Estimate" "SE") ///
-stats(N p_value corr_p_value holm_, /// 
-labels("Sample size" "p-value" "Bonferroni" "Holm") ) 
+stats(N p_value corr_p_value holm_ bky_, /// 
+labels("Sample size" "p-value" "Bonferroni" "Holm" "BKY") ) 
