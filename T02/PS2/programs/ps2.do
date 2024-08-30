@@ -121,6 +121,12 @@ stats(N, labels("Sample size") )
 * PANEL C (Material investments)  
 ******************************************************************************* 
 
+label var fci_play_mat_typel_st "FCI: Number of types of play materials"
+label var Npaintbooks1_st "FCI:Number of coloring and drawing books"
+label var Nthingsmove1_st "FCI: Number of toys to learn movement" 
+label var Ntoysshapel_st "FCI: Number of toys to learn shapes" 
+label var Ntoysbought1_st "FCI: Number of shop-bought toys"
+
 local fcimat "fci_play_mat_type Npaintbooks Nthingsmove Ntoysshape Ntoysbought"
 foreach y of local fcimat{
 	cap drop V*
@@ -138,6 +144,12 @@ stats(N, labels("Sample size") )
 ******************************************************************************* 
 * PANEL D (Time investments)  
 ******************************************************************************* 
+
+label var fci_play_act1_st "FCI: Number of types of play activities in last 3 days"
+label var home_stories1_st "FCI: Number of times told a story to child in last 3 days"
+label var home_read1_st "FCI: Number of times read to child in last 3 days"
+label var home_toys1_st "FCI: Number of times played with toys in last 3 days"
+label var home_name1_st "FCI: Number of times named things to child in last 3 days"
 
 local fcitime "fci_play_act home_stories home_read home_toys home_name"
 foreach y of local fcitime{
