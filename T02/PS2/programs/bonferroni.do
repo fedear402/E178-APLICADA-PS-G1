@@ -189,11 +189,11 @@ use "$output/pvals.dta", clear
 rename p_values1 pval
 version 10
 set more off
-quietly sum pval
+sum pval
 local totalpvals = r(N)
-quietly gen int original_sorting_order = _n
-quietly sort pval
-quietly gen int rank = _n if pval~=.
+gen original_sorting_order = _n
+sort pval
+gen rank = _n if pval~=.
 local qval = 1
 gen bky06_qval = 1 if pval~=.
 while `qval' > 0 {
@@ -211,12 +211,8 @@ while `qval' > 0 {
 	drop fdr_temp* reject_temp* reject_rank* total_rejected*
 	local qval = `qval' - .001
 }
-quietly sort original_sorting_order
+sort _
 pause off
-set more on
-display "Code has completed."
-display "Benjamini Krieger Yekutieli (2006) sharpened q-vals are in variable 'bky06_qval'"
-display	"Sorting order is the same as the original vector of p-values"
 keep pval bky06_qval
 mkmat bky06_qval, matrix(bky)
 save "$output/sharpenedqvals.dta", replace
@@ -255,6 +251,7 @@ scalar i = 1
 * PANEL A (Child's cognitive skills at follow up) 
 ******************************************************************************* 
 eststo clear
+
 local bayley "b_tot_cog b_tot_lr b_tot_le b_tot_mf"
 foreach y of local bayley{
 	local append append 
@@ -281,7 +278,7 @@ foreach y of local macarthur{
 	scalar i = i + 1	
 } 
 
-esttab using "$output/PanelA_bonferroni_holm.rtf", replace label noobs ///
+esttab using "$output/PanelA_bonferroni_holm_bky.rtf", replace label noobs ///
 keep(treat, relax) ///
 cells(b(fmt(3)) t(drop(treat)) se(par label(SE) fmt(3)) ) /// 
 title("Panel A. Child’s cognitive skills at follow-up") ///
@@ -319,7 +316,7 @@ foreach y of local roth{
 	scalar i = i + 1
 } 
 
-esttab using "$output/PanelB_bonferroni_holm.rtf", replace label noobs ///
+esttab using "$output/PanelB_bonferroni_holm_bky.rtf", replace label noobs ///
 keep(treat, relax) ///
 cells(b(fmt(3)) t(drop(treat)) se(par label(SE) fmt(3)) ) /// 
 title("Panel B. Child’s socio-emotional skills at follow-up") ///
@@ -344,7 +341,7 @@ foreach y of local fcimat{
 	scalar i = i + 1
 } 
 
-esttab using "$output/PanelC_bonferroni_holm.rtf", replace label noobs ///
+esttab using "$output/PanelC_bonferroni_holm_bky.rtf", replace label noobs ///
 keep(treat, relax) ///
 cells(b(fmt(3)) t(drop(treat)) se(par label(SE) fmt(3)) ) /// 
 title("Panel C. Material investments at follow-up") ///
@@ -369,7 +366,7 @@ foreach y of local fcitime{
 scalar i = i + 1
 }
 
-esttab using "$output/PanelD_bonferroni_holm.rtf", replace label noobs ///
+esttab using "$output/PanelD_bonferroni_holm_bky.rtf", replace label noobs ///
 keep(treat, relax) nonumbers  ///
 cells( b(fmt(3)) t(drop(treat)) se(par label(SE) fmt(3)) ) /// 
 title("Panel D. Time investments at follow-up") ///
